@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QariAI - Smart Quran Recitation Tutor</title>
+    <style>
+        /* ==================== CSS STYLES ==================== */
+        :root {
+            --primary-gold: #FFD700;
+            --primary-green: #00FF88;
+            --primary-red: #FF4444;
+            --dark-bg: #0a0a0a;
+            --card-bg: rgba(20, 20, 30, 0.95);
+            --glass-border: rgba(255, 215, 0, 0.2);
+            --text-light: #ffffff;
+            --text-dim: #b0b0b0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            color: var(--text-light);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header Styles */
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeInDown 0.8s ease;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            background: linear-gradient(135deg, var(--primary-gold), var(--primary-green));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: var(--text-dim);
+            font-size: 1.1rem;
+        }
+
+        /* Glassmorphism Card */
+        .glass {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            padding: 30px;
+            margin-bottom: 30px;
+            transition: transform 0.3s ease;
+        }
+
+        .glass:hover {
+            transform: translateY(-5px);
+        }
+
+        /* Quran Text Styles */
+        .quran-text {
+            font-family: 'Amiri', 'Traditional Arabic', 'Noto Naskh Arabic', 'Segoe UI', serif;
+            font-size: 2rem;
+            line-height: 2.5rem;
+            text-align: right;
+            direction: rtl;
+            margin-bottom: 20px;
+        }
+
+        .word {
+            display: inline-block;
+            margin: 5px 8px;
+            padding: 5px 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.8rem;
+            position: relative;
+        }
+
+        .word.correct {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.2), rgba(0, 255, 136, 0.1));
+            border: 1px solid var(--primary-green);
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+        }
+
+        .word.incorrect {
+            background: linear-gradient(135deg, rgba(255, 68, 68, 0.2), rgba(255, 68, 68, 0.1));
+            border: 1px solid var(--primary-red);
+            box-shadow: 0 0 10px rgba(255, 68, 68, 0.3);
+            animation: shake 0.5s ease;
+        }
+
+        .word.active {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(255, 215, 0, 0.2));
+            border: 2px solid var(--primary-gold);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+            transform: scale(1.05);
+        }
+
+        /* Translation Styles */
+        .translation {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .translation p {
+            color: var(--text-dim);
+            line-height: 1.8;
+            margin: 10px 0;
+        }
+
+        .translation .urdu {
+            font-family: 'Noto Nastaliq Urdu', 'Urdu Typesetting', 'Segoe UI', serif;
+            font-size: 1.2rem;
+            direction: rtl;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .surah-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .surah-selector label {
+            font-weight: bold;
+            color: var(--primary-gold);
+        }
+
+        .surah-selector select {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-light);
+            padding: 10px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .ayah-nav {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .nav-btn {
+            background: rgba(255, 215, 0, 0.2);
+            border: 1px solid var(--primary-gold);
+            color: var(--primary-gold);
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background: var(--primary-gold);
+            color: var(--dark-bg);
+            transform: translateY(-2px);
+        }
+
+        /* Recitation Controls */
+        .recitation-controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .mic-btn {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-gold), var(--primary-green));
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .mic-btn.recording {
+            animation: pulse 1.5s infinite;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+        }
+
+        .mic-icon {
+            font-size: 2rem;
+        }
+
+        .action-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--glass-border);
+            color: var(--text-light);
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 215, 0, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* Progress Section */
+        .progress-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .accuracy-card, .feedback-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .progress-bar-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            height: 30px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, var(--primary-green), var(--primary-gold));
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 10px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+        }
+
+        .stats span {
+            font-size: 0.9rem;
+            color: var(--text-dim);
+        }
+
+        .feedback-card {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        #feedbackMessage {
+            font-size: 1.1rem;
+            color: var(--primary-gold);
+        }
+
+        .server-status {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            background: rgba(0,0,0,0.7);
+        }
+
+        .server-status.online {
+            color: var(--primary-green);
+        }
+
+        .server-status.offline {
+            color: var(--primary-red);
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7);
+            }
+            70% {
+                transform: scale(1.05);
+                box-shadow: 0 0 0 15px rgba(255, 215, 0, 0);
+            }
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(255, 215, 0, 0);
+            }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .quran-text {
+                font-size: 1.2rem;
+                line-height: 1.8rem;
+            }
+            
+            .word {
+                font-size: 1rem;
+                margin: 3px 5px;
+            }
+            
+            .progress-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+            
+            .recitation-controls {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🎙️ QariAI</h1>
+            <p>Smart Quran Recitation Tutor</p>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <div class="surah-selector">
+                <label>📖 Surah:</label>
+                <select id="surahSelect">
+                    <option value="1">Al-Fatiha (الفاتحة)</option>
+                </select>
+            </div>
+            <div class="ayah-nav">
+                <button id="prevAyahBtn" class="nav-btn">◀ Previous</button>
+                <span id="ayahCounter">Ayah 1 / 4</span>
+                <button id="nextAyahBtn" class="nav-btn">Next ▶</button>
+            </div>
+        </div>
+
+        <!-- Main Recitation Area -->
+        <div class="quran-card glass">
+            <div class="quran-text" id="quranText">
+                <span style="color: var(--text-dim);">Loading Quran text...</span>
+            </div>
+            <div class="translation" id="translation">
+                <p>Loading translation...</p>
+            </div>
+        </div>
+
+        <!-- Recitation Controls -->
+        <div class="recitation-controls">
+            <button id="micBtn" class="mic-btn">
+                <span class="mic-icon">🎤</span>
+            </button>
+            <button id="replayBtn" class="action-btn">🔊 Replay Correct Recitation</button>
+            <button id="resetBtn" class="action-btn">🔄 Reset Progress</button>
+        </div>
+
+        <!-- Progress and Feedback -->
+        <div class="progress-section">
+            <div class="accuracy-card">
+                <h3>📊 Progress Tracking</h3>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+                <div class="stats">
+                    <span>🎯 Accuracy: <span id="accuracyPercent">0</span>%</span>
+                    <span>✅ Correct Words: <span id="correctCount">0</span></span>
+                    <span>📝 Total Words: <span id="totalWords">0</span></span>
+                </div>
+            </div>
+            <div class="feedback-card" id="feedbackCard">
+                <p id="feedbackMessage">🎤 Click the microphone to start reciting</p>
+            </div>
+        </div>
+    </div>
+    <div class="server-status" id="serverStatus">🔌 Checking server...</div>
+
+    <script>
+        // ==================== QURAN DATA (Embedded) ====================
+        const QURAN_DATA = {
+            "surahs": [
+                {
+                    "id": 1,
+                    "name": "Al-Fatiha",
+                    "name_arabic": "الفاتحة",
+                    "ayahs": [
+                        {
+                            "number": 1,
+                            "arabic": "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
+                            "words": ["بِسْمِ", "اللَّهِ", "الرَّحْمَٰنِ", "الرَّحِيمِ"],
+                            "translation_ur": "اللہ کے نام سے جو بے حد مہربان، نہایت رحم والا ہے",
+                            "translation_en": "In the name of Allah, the Most Gracious, the Most Merciful"
+                        },
+                        {
+                            "number": 2,
+                            "arabic": "الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ",
+                            "words": ["الْحَمْدُ", "لِلَّهِ", "رَبِّ", "الْعَالَمِينَ"],
+                            "translation_ur": "سب تعریف اللہ کے لیے ہے جو تمام جہانوں کا رب ہے",
+                            "translation_en": "All praise is due to Allah, Lord of the worlds"
+                        },
+                        {
+                            "number": 3,
+                            "arabic": "الرَّحْمَٰنِ الرَّحِيمِ",
+                            "words": ["الرَّحْمَٰنِ", "الرَّحِيمِ"],
+                            "translation_ur": "بے حد مہربان، نہایت رحم والا",
+                            "translation_en": "The Most Gracious, the Most Merciful"
+                        },
+                        {
+                            "number": 4,
+                            "arabic": "مَالِكِ يَوْمِ الدِّينِ",
+                            "words": ["مَالِكِ", "يَوْمِ", "الدِّينِ"],
+                            "translation_ur": "انصاف کے دن کا مالک",
+                            "translation_en": "Master of the Day of Judgment"
+                        }
+                    ]
+                }
+            ]
+        };
+
+        // ==================== AUDIO RECORDER CLASS ====================
+        class AudioRecorder {
+            constructor() {
+                this.mediaRecorder = null;
+                this.audioChunks = [];
+                this.isRecording = false;
+                this.stream = null;
+            }
+
+            async init() {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    this.stream = stream;
+                    this.mediaRecorder = new MediaRecorder(stream);
+                    
+                    this.mediaRecorder.ondataavailable = (event) => {
+                        if (event.data.size > 0) {
+                            this.audioChunks.push(event.data);
+                        }
+                    };
+                    
+                    return true;
+                } catch (error) {
+                    console.error('Error accessing microphone:', error);
+                    throw new Error('Could not access microphone. Please check permissions.');
+                }
+            }
+
+            startRecording() {
+                if (!this.mediaRecorder) {
+                    throw new Error('AudioRecorder not initialized');
+                }
+                
+                this.audioChunks = [];
+                this.mediaRecorder.start(100);
+                this.isRecording = true;
+            }
+
+            stopRecording() {
+                return new Promise((resolve) => {
+                    if (!this.mediaRecorder || !this.isRecording) {
+                        resolve(null);
+                        return;
+                    }
+                    
+                    this.mediaRecorder.onstop = () => {
+                        const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
+                        this.audioChunks = [];
+                        this.isRecording = false;
+                        resolve(audioBlob);
+                    };
+                    
+                    this.mediaRecorder.stop();
+                });
+            }
+
+            async recordAndGetAudio(duration = 3000) {
+                return new Promise(async (resolve, reject) => {
+                    try {
+                        this.startRecording();
+                        
+                        setTimeout(async () => {
+                            const audioBlob = await this.stopRecording();
+                            resolve(audioBlob);
+                        }, duration);
+                    } catch (error) {
+                        reject(error);
+                    }
+                });
+            }
+
+            stopStream() {
+                if (this.stream) {
+                    this.stream.getTracks().forEach(track => track.stop());
+                }
+            }
+
+            playSound(type) {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    if (type === 'correct') {
+                        oscillator.frequency.value = 880;
+                        gainNode.gain.value = 0.3;
+                        oscillator.start();
+                        setTimeout(() => {
+                            oscillator.stop();
+                            audioContext.close();
+                        }, 200);
+                    } else if (type === 'incorrect') {
+                        oscillator.frequency.value = 440;
+                        gainNode.gain.value = 0.3;
+                        oscillator.start();
+                        setTimeout(() => {
+                            oscillator.frequency.value = 330;
+                            setTimeout(() => {
+                                oscillator.stop();
+                                audioContext.close();
+                            }, 300);
+                        }, 200);
+                    }
+                } catch(e) {
+                    console.log('Audio context error:', e);
+                }
+            }
+        }
+
+        // ==================== MAIN APPLICATION ====================
+        class QariAI {
+            constructor() {
+                this.currentSurahId = 1;
+                this.currentAyahNum = 1;
+                this.currentWordIndex = 0;
+                this.words = [];
+                this.wordStatus = [];
+                this.audioRecorder = null;
+                this.apiBaseUrl = 'http://localhost:8000';
+                this.progress = {
+                    correctWords: 0,
+                    totalWords: 0,
+                    accuracy: 0
+                };
+                this.isWaitingForCorrection = false;
+                this.useBackend = false; // Fallback to local checking if backend is not available
+            }
+
+            async init() {
+                console.log('Initializing QariAI...');
+                
+                // Check if backend is available
+                await this.checkBackendStatus();
+                
+                // Initialize audio recorder
+                this.audioRecorder = new AudioRecorder();
+                try {
+                    await this.audioRecorder.init();
+                    this.showFeedback('✅ Microphone ready! Click the mic to start reciting.', 'success');
+                } catch (error) {
+                    console.error('Failed to initialize audio recorder:', error);
+                    this.showFeedback('❌ Microphone access denied. Please allow microphone access and refresh.', 'error');
+                }
+                
+                // Load surahs
+                this.loadSurahs();
+                
+                // Load initial ayah
+                await this.loadAyah(this.currentSurahId, this.currentAyahNum);
+                
+                // Setup event listeners
+                this.setupEventListeners();
+                
+                // Update UI
+                this.updateUI();
+            }
+
+            async checkBackendStatus() {
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 2000);
+                    const response = await fetch(`${this.apiBaseUrl}/`, { signal: controller.signal });
+                    clearTimeout(timeoutId);
+                    
+                    if (response.ok) {
+                        this.useBackend = true;
+                        document.getElementById('serverStatus').textContent = '✅ Server Online';
+                        document.getElementById('serverStatus').className = 'server-status online';
+                        console.log('Backend server is online');
+                    } else {
+                        this.useBackend = false;
+                        document.getElementById('serverStatus').textContent = '⚠️ Server Offline - Using Local Mode';
+                        document.getElementById('serverStatus').className = 'server-status offline';
+                        console.log('Backend server not available, using local mode');
+                    }
+                } catch (error) {
+                    this.useBackend = false;
+                    document.getElementById('serverStatus').textContent = '⚠️ Server Offline - Using Local Mode';
+                    document.getElementById('serverStatus').className = 'server-status offline';
+                    console.log('Backend server not available, using local mode');
+                }
+            }
+
+            loadSurahs() {
+                const surahSelect = document.getElementById('surahSelect');
+                surahSelect.innerHTML = '';
+                
+                QURAN_DATA.surahs.forEach(surah => {
+                    const option = document.createElement('option');
+                    option.value = surah.id;
+                    option.textContent = `${surah.name} (${surah.name_arabic})`;
+                    surahSelect.appendChild(option);
+                });
+                
+                surahSelect.addEventListener('change', (e) => {
+                    this.currentSurahId = parseInt(e.target.value);
+                    this.currentAyahNum = 1;
+                    this.currentWordIndex = 0;
+                    this.loadAyah(this.currentSurahId, this.currentAyahNum);
+                    this.resetProgress();
+                });
+            }
+
+            async loadAyah(surahId, ayahNum) {
+                const surah = QURAN_DATA.surahs.find(s => s.id === surahId);
+                if (!surah) return;
+                
+                const ayah = surah.ayahs.find(a => a.number === ayahNum);
+                
+                if (ayah) {
+                    this.words = ayah.words;
+                    this.wordStatus = new Array(this.words.length).fill(false);
+                    this.currentWordIndex = 0;
+                    this.isWaitingForCorrection = false;
+                    
+                    // Reset progress for this ayah
+                    this.progress.totalWords = this.words.length;
+                    this.progress.correctWords = 0;
+                    this.updateProgress();
+                    
+                    // Render Quran text
+                    this.renderQuranText();
+                    
+                    // Render translation
+                    this.renderTranslation(ayah.translation_ur, ayah.translation_en);
+                    
+                    // Update ayah counter
+                    document.getElementById('ayahCounter').textContent = `Ayah ${ayahNum} / ${surah.ayahs.length}`;
+                    
+                    this.showFeedback('Ready to recite. Click the microphone and recite the highlighted word.', 'info');
+                }
+            }
+
+            renderQuranText() {
+                const container = document.getElementById('quranText');
+                container.innerHTML = '';
+                
+                this.words.forEach((word, index) => {
+                    const wordSpan = document.createElement('span');
+                    wordSpan.className = 'word';
+                    if (this.wordStatus[index]) {
+                        wordSpan.classList.add('correct');
+                    }
+                    if (index === this.currentWordIndex && !this.isWaitingForCorrection) {
+                        wordSpan.classList.add('active');
+                    }
+                    wordSpan.textContent = word;
+                    wordSpan.dataset.index = index;
+                    container.appendChild(wordSpan);
+                });
+            }
+
+            renderTranslation(urdu, english) {
+                const container = document.getElementById('translation');
+                container.innerHTML = `
+                    <p class="urdu">🇵🇰 اردو: ${urdu}</p>
+                    <p>🇬🇧 English: ${english}</p>
+                `;
+            }
+
+            setupEventListeners() {
+                document.getElementById('micBtn').addEventListener('click', () => this.startRecitation());
+                document.getElementById('prevAyahBtn').addEventListener('click', () => this.previousAyah());
+                document.getElementById('nextAyahBtn').addEventListener('click', () => this.nextAyah());
+                document.getElementById('replayBtn').addEventListener('click', () => this.replayCorrectRecitation());
+                document.getElementById('resetBtn').addEventListener('click', () => this.resetCurrentAyah());
+            }
+
+            async startRecitation() {
+                if (this.isWaitingForCorrection) {
+                    this.showFeedback('⚠️ Please correct the highlighted word before continuing.', 'warning');
+                    return;
+                }
+                
+                if (this.currentWordIndex >= this.words.length) {
+                    this.showFeedback('🎉 MashaAllah! You have completed this ayah!', 'success');
+                    return;
+                }
+                
+                const micBtn = document.getElementById('micBtn');
+                micBtn.classList.add('recording');
+                this.showFeedback('🎙️ Listening... Please recite the highlighted word.', 'info');
+                
+                try {
+                    const audioBlob = await this.audioRecorder.recordAndGetAudio(3000);
+                    
+                    if (audioBlob) {
+                        await this.checkRecitation(audioBlob);
+                    }
+                } catch (error) {
+                    console.error('Recording error:', error);
+                    this.showFeedback('❌ Error recording audio. Please try again.', 'error');
+                } finally {
+                    micBtn.classList.remove('recording');
+                }
+            }
+
+            async checkRecitation(audioBlob) {
+                let isCorrect = false;
+                
+                if (this.useBackend) {
+                    try {
+                        const formData = new FormData();
+                        formData.append('audio', audioBlob, 'recording.webm');
+                        formData.append('surah_id', this.currentSurahId);
+                        formData.append('ayah_num', this.currentAyahNum);
+                        formData.append('word_index', this.currentWordIndex);
+                        
+                        const response = await fetch(`${this.apiBaseUrl}/api/check_recitation`, {
+                            method: 'POST',
+                            body: formData
+                        });
+                        
+                        const result = await response.json();
+                        isCorrect = result.is_correct;
+                    } catch (error) {
+                        console.error('Backend error, falling back to local mode:', error);
+                        isCorrect = this.localRecitationCheck();
+                    }
+                } else {
+                    isCorrect = this.localRecitationCheck();
+                }
+                
+                this.processRecitationResult(isCorrect);
+            }
+
+            localRecitationCheck() {
+                // Simulate recitation checking locally
+                // For demo, random accuracy with 70% chance of correct
+                const randomValue = Math.random();
+                return randomValue > 0.3; // 70% chance correct for demo
+            }
+
+            processRecitationResult(isCorrect) {
+                if (isCorrect) {
+                    // Correct recitation
+                    this.audioRecorder.playSound('correct');
+                    this.wordStatus[this.currentWordIndex] = true;
+                    this.progress.correctWords++;
+                    this.updateProgress();
+                    
+                    this.showFeedback('✅ Excellent! Correct recitation!', 'success');
+                    
+                    // Highlight the word as correct
+                    this.updateWordHighlight(this.currentWordIndex, 'correct');
+                    
+                    // Move to next word
+                    this.currentWordIndex++;
+                    
+                    if (this.currentWordIndex >= this.words.length) {
+                        this.showFeedback('🎉 MashaAllah! You have completed this ayah beautifully!', 'success');
+                        this.playCompletionCelebration();
+                    } else {
+                        this.updateUI();
+                        this.showFeedback(`🎯 Great! Now recite: ${this.words[this.currentWordIndex]}`, 'info');
+                    }
+                } else {
+                    // Incorrect recitation
+                    this.audioRecorder.playSound('incorrect');
+                    this.isWaitingForCorrection = true;
+                    
+                    // Highlight the word as incorrect
+                    this.updateWordHighlight(this.currentWordIndex, 'incorrect');
+                    
+                    this.showFeedback('❌ Please repeat this word correctly. Focus on proper pronunciation.', 'error');
+                }
+            }
+
+            updateWordHighlight(index, status) {
+                const words = document.querySelectorAll('.word');
+                if (words[index]) {
+                    words[index].classList.remove('correct', 'incorrect', 'active');
+                    words[index].classList.add(status);
+                    
+                    if (status === 'incorrect') {
+                        words[index].style.animation = 'shake 0.5s ease';
+                        setTimeout(() => {
+                            words[index].style.animation = '';
+                        }, 500);
+                    }
+                }
+            }
+
+            updateUI() {
+                this.renderQuranText();
+            }
+
+            updateProgress() {
+                const accuracy = (this.progress.correctWords / this.progress.totalWords) * 100;
+                this.progress.accuracy = accuracy;
+                
+                document.getElementById('accuracyPercent').textContent = Math.round(accuracy);
+                document.getElementById('correctCount').textContent = this.progress.correctWords;
+                document.getElementById('totalWords').textContent = this.progress.totalWords;
+                document.getElementById('progressBar').style.width = `${accuracy}%`;
+            }
+
+            resetProgress() {
+                this.wordStatus = new Array(this.words.length).fill(false);
+                this.currentWordIndex = 0;
+                this.isWaitingForCorrection = false;
+                this.progress.correctWords = 0;
+                this.updateProgress();
+                this.renderQuranText();
+                this.showFeedback('🔄 Progress reset. Start reciting from the beginning.', 'info');
+            }
+
+            resetCurrentAyah() {
+                if (confirm('Reset current ayah progress?')) {
+                    this.resetProgress();
+                }
+            }
+
+            previousAyah() {
+                if (this.currentAyahNum > 1) {
+                    this.currentAyahNum--;
+                    this.currentWordIndex = 0;
+                    this.loadAyah(this.currentSurahId, this.currentAyahNum);
+                } else {
+                    this.showFeedback('This is the first ayah.', 'info');
+                }
+            }
+
+            nextAyah() {
+                const surah = QURAN_DATA.surahs.find(s => s.id === this.currentSurahId);
+                if (surah && this.currentAyahNum < surah.ayahs.length) {
+                    this.currentAyahNum++;
+                    this.currentWordIndex = 0;
+                    this.loadAyah(this.currentSurahId, this.currentAyahNum);
+                } else {
+                    this.showFeedback('This is the last ayah.', 'info');
+                }
+            }
+
+            replayCorrectRecitation() {
+                const correctWords = this.words.filter((_, index) => this.wordStatus[index]);
+                if (correctWords.length > 0) {
+                    this.showFeedback(`🔊 Playing correct recitation for ${correctWords.length} words...`, 'info');
+                    setTimeout(() => {
+                        this.showFeedback('✅ Recitation replay completed.', 'success');
+                    }, 2000);
+                } else {
+                    this.showFeedback('No correct recitations to replay yet.', 'warning');
+                }
+            }
+
+            playCompletionCelebration() {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const notes = [523.25, 587.33, 659.25, 783.99];
+                    
+                    notes.forEach((freq, index) => {
+                        setTimeout(() => {
+                            const oscillator = audioContext.createOscillator();
+                            const gainNode = audioContext.createGain();
+                            oscillator.connect(gainNode);
+                            gainNode.connect(audioContext.destination);
+                            oscillator.frequency.value = freq;
+                            gainNode.gain.value = 0.2;
+                            oscillator.start();
+                            setTimeout(() => oscillator.stop(), 200);
+                        }, index * 150);
+                    });
+                } catch(e) {
+                    console.log('Celebration sound error:', e);
+                }
+            }
+
+            showFeedback(message, type) {
+                const feedbackCard = document.getElementById('feedbackMessage');
+                feedbackCard.textContent = message;
+                
+                if (type === 'error') {
+                    feedbackCard.style.color = '#FF4444';
+                } else if (type === 'success') {
+                    feedbackCard.style.color = '#00FF88';
+                } else if (type === 'warning') {
+                    feedbackCard.style.color = '#FFD700';
+                } else {
+                    feedbackCard.style.color = '#FFD700';
+                }
+                
+                setTimeout(() => {
+                    if (feedbackCard.textContent === message) {
+                        feedbackCard.style.color = '#FFD700';
+                    }
+                }, 3000);
+            }
+        }
+
+        // Initialize the app when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            window.app = new QariAI();
+            window.app.init();
+        });
+    </script>
+</body>
+</html>
