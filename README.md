@@ -71,4 +71,5 @@ QariAI is a full-stack web application that uses artificial intelligence to help
 2. Double-click to open in browser
 3. Allow microphone access
 4. Start reciting!
-
+## Author 
+**Sameerah Maqbool**
