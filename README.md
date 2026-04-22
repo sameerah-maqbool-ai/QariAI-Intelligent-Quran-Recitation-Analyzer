@@ -1,5 +1,5 @@
 # 🎙️ QariAI – Smart Quran Recitation Tutor
-
+<img width="1536" height="1024" alt="Image" src="https://github.com/user-attachments/assets/9c79f40d-2073-46d0-9242-e78a71200c4b" />
 <div align="center">
 
 ![Version](https://img.shields.io/badge/version-1.0.0-blue)
